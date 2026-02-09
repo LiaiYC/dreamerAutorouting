@@ -141,3 +141,5 @@ log/
 logs/
 dreamerv3_results/
 dreamerv3_optimized/
+# Model checkpoints
+*.pt
