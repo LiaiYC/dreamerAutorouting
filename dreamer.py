@@ -3,8 +3,8 @@ import functools
 import os
 import pathlib
 import sys
-
-os.environ["MUJOCO_GL"] = "osmesa"
+import gymnasium as gym
+os.environ["MUJOCO_GL"] = "glfw"
 
 import numpy as np
 import ruamel.yaml as yaml
@@ -23,7 +23,6 @@ from torch import distributions as torchd
 
 
 to_np = lambda x: x.detach().cpu().numpy()
-
 
 class Dreamer(nn.Module):
     def __init__(self, obs_space, act_space, config, logger, dataset):
@@ -193,6 +192,33 @@ def make_env(config, mode, id):
 
         env = minecraft.make_env(task, size=config.size, break_speed=config.break_speed)
         env = wrappers.OneHotAction(env)
+    elif suite == 'gym':
+        # 建立 Gym 基礎環境
+        env = gym.make(config.task)
+        
+        # 使用 wrappers.FromGym 來轉換環境接口，使其符合 Dreamer 的要求
+        env = wrappers.FromGym(env, obs_key='state')
+        
+        # 檢查是否需要加上其他 wrapper
+        if config.wrappers.action_repeat > 1:
+          env = wrappers.ActionRepeat(env, config.wrappers.action_repeat)
+        
+        # 如果有 reward_scale 的設定，則加上對應的 wrapper
+        if config.wrappers.get('reward_scale', 1) != 1:
+          env = wrappers.RewardScale(env, config.wrappers.reward_scale)
+
+    elif suite == "circuit":
+        # Circuit Routing Environment
+        from envs import circuit_routing
+        env = circuit_routing.CircuitRoutingEnv(
+            config.task,
+            action_repeat=config.action_repeat,
+            size=config.size
+        )
+        env = wrappers.TimeLimit(env, config.time_limit)
+        env = wrappers.SelectAction(env, key="action")
+        env = wrappers.UUID(env)
+        return env
     else:
         raise NotImplementedError(suite)
     env = wrappers.TimeLimit(env, config.time_limit)
@@ -251,11 +277,11 @@ def main(config):
     if not config.offline_traindir:
         prefill = max(0, config.prefill - count_steps(config.traindir))
         print(f"Prefill dataset ({prefill} steps).")
-        if hasattr(acts, "discrete"):
+        if hasattr(acts, 'n'):  # Discrete action space
             random_actor = tools.OneHotDist(
-                torch.zeros(config.num_actions).repeat(config.envs, 1)
+                torch.zeros(acts.n).repeat(config.envs, 1)
             )
-        else:
+        else:  # Continuous action space
             random_actor = torchd.independent.Independent(
                 torchd.uniform.Uniform(
                     torch.tensor(acts.low).repeat(config.envs, 1),

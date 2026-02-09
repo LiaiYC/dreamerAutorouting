@@ -1,0 +1,12 @@
+{
+  "task": "circuit_routing_medium",
+  "total_timesteps": 500000,
+  "total_episodes": 10780,
+  "start_time": "2025-10-25 14:40:54",
+  "end_time": "2025-10-25 17:51:15",
+  "duration_seconds": 11420.902699232101,
+  "duration_formatted": "3h 10m 20s",
+  "avg_reward_last_100": -1302.965542521994,
+  "avg_length_last_100": 50.0,
+  "fps": 43.77937656658419
+}

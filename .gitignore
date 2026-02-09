@@ -136,3 +136,8 @@ dmypy.json
 
 # VScode
 .vscode/*
+# Large local outputs (added for GitHub)
+log/
+logs/
+dreamerv3_results/
+dreamerv3_optimized/

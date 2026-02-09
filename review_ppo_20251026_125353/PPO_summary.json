@@ -1,0 +1,50 @@
+{
+  "model_name": "PPO",
+  "timestamp": "2025-10-26 12:54:15",
+  "episode_summary": {
+    "total_reward": 113.03846153846152,
+    "total_steps": 30,
+    "avg_reward_per_step": 3.7679487179487174
+  },
+  "circuit_config": {
+    "grid_size": [
+      40,
+      40
+    ],
+    "num_layers": 2,
+    "num_components": 8,
+    "total_pins": 40,
+    "total_nets": 13
+  },
+  "final_metrics": {
+    "wire_length": 585.6,
+    "wire_length_threshold": 150.0,
+    "si_pi_performance": 0.8423358818715134,
+    "si_pi_threshold": 0.7,
+    "total_vias": 31,
+    "unrouted_nets": 5,
+    "drc_violations": {
+      "trace_width": 1,
+      "trace_spacing": 1,
+      "via_spacing": 0,
+      "via_to_trace": 1,
+      "clearance": 0
+    },
+    "total_violations": 3
+  },
+  "success_criteria": {
+    "drc_rules_satisfied": false,
+    "performance_met": false,
+    "overall_success": false
+  },
+  "trajectory": {
+    "initial_wire_length": 585.6,
+    "final_wire_length": 585.6,
+    "wire_length_improvement": 0.0,
+    "initial_si_pi": 0.8423358818715134,
+    "final_si_pi": 0.8423358818715134,
+    "si_pi_improvement": 0.0,
+    "initial_drc_violations": 3,
+    "final_drc_violations": 3
+  }
+}

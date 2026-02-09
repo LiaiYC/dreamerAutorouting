@@ -1,0 +1,26 @@
+{
+  "DQN": {
+    "mean_reward": 1332.775641025641,
+    "std_reward": 415.4938908871739,
+    "mean_length": 30.0,
+    "success_rate": 0.0
+  },
+  "GA": {
+    "mean_reward": 964.5329059829061,
+    "std_reward": 117.97415059927687,
+    "mean_length": 20.0,
+    "success_rate": 0.0
+  },
+  "A*": {
+    "mean_reward": 102.3295299145299,
+    "std_reward": 160.96877162440478,
+    "mean_length": 3.25,
+    "success_rate": 0.0
+  },
+  "SA": {
+    "mean_reward": 883.1135897435897,
+    "std_reward": 298.32616518946145,
+    "mean_length": 20.0,
+    "success_rate": 0.0
+  }
+}

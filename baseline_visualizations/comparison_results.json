@@ -1,0 +1,30 @@
+{
+  "DQN": {
+    "reward": 1758.8076923076924,
+    "final_wire_length": 308.32,
+    "final_si_pi": 0.9818114194613692,
+    "final_violations": 0,
+    "final_unrouted": 0
+  },
+  "GA": {
+    "reward": 818.5307692307692,
+    "final_wire_length": 414.91999999999996,
+    "final_si_pi": 0.9793712929511121,
+    "final_violations": 0,
+    "final_unrouted": 0
+  },
+  "A*": {
+    "reward": 374.10769230769233,
+    "final_wire_length": 457.55999999999995,
+    "final_si_pi": 0.9840591108153676,
+    "final_violations": 1,
+    "final_unrouted": 0
+  },
+  "SA": {
+    "reward": 383.0769230769231,
+    "final_wire_length": 390.2079999999999,
+    "final_si_pi": 0.9855864694071473,
+    "final_violations": 1,
+    "final_unrouted": 1
+  }
+}

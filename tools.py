@@ -11,6 +11,7 @@ import random
 import numpy as np
 
 import torch
+from torch import amp
 from torch import nn
 from torch.nn import functional as F
 from torch import distributions as torchd
@@ -744,7 +745,7 @@ class Optimizer:
             "sgd": lambda: torch.optim.SGD(parameters, lr=lr),
             "momentum": lambda: torch.optim.SGD(parameters, lr=lr, momentum=0.9),
         }[opt]()
-        self._scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
+        self._scaler = amp.GradScaler('cuda', enabled=use_amp)
 
     def __call__(self, loss, params, retain_graph=True):
         assert len(loss.shape) == 0, loss.shape

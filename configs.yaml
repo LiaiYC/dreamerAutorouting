@@ -93,6 +93,13 @@ defaults:
   disag_units: 400
   disag_action_cond: False
 
+walker:
+  task: Walker2d-v4
+  encoder:
+    mlp_keys: 'state'
+  decoder:
+    mlp_keys: 'state'
+
 dmc_proprio:
   steps: 5e5
   action_repeat: 2
@@ -110,6 +117,13 @@ dmc_vision:
   video_pred_log: true
   encoder: {mlp_keys: '$^', cnn_keys: 'image'}
   decoder: {mlp_keys: '$^', cnn_keys: 'image'}
+
+cheetah:
+  task: HalfCheetah-v4
+  encoder:
+    mlp_keys: 'state'
+  decoder:
+    mlp_keys: 'state'
 
 crafter:
   task: crafter_reward
@@ -145,6 +159,30 @@ atari100k:
   actions: needed
   time_limit: 108000
 
+freerouting:
+  defaults:
+    - defaults
+    - _dreamer
+  task: freerouting_dreamer_v3
+  envs:
+    type: from_gym
+    from_gym:
+      name: 'Freerouting-v0'
+      obs_key: image
+  action_space:
+    discrete: 100
+  obs_space:
+    shape: [64, 64, 3] 
+    dtype: 'uint8'     
+    image: ${obs_space}
+  encoder:
+    type: cnn
+  decoder:
+    type: cnn
+  env:
+    render_size: [64, 64]
+    action_repeat: 1
+
 minecraft:
   task: minecraft_diamond
   step: 1e8
@@ -176,6 +214,451 @@ memorymaze:
   imag_gradient: 'reinforce'
   task: 'memorymaze_9x9'
 
+# ============================================
+# Circuit Routing Environment Configuration
+# ============================================
+
+circuit_routing:
+  task: circuit_routing_basic
+  steps: 1e6
+  envs: 4
+  action_repeat: 1
+  time_limit: 50
+  prefill: 10000
+  parallel: False
+  size: [64, 64]
+  grayscale: False
+  batch_size: 16
+  batch_length: 64
+  train_ratio: 512
+  pretrain: 100
+  dataset_size: 2000000
+  model_lr: 1e-4
+  opt_eps: 1e-8
+  grad_clip: 1000
+  actor:
+    {layers: 2, dist: 'onehot', entropy: 3e-4, unimix_ratio: 0.01, std: 'none', min_std: 0.1, max_std: 1.0, temp: 0.1, lr: 3e-5, eps: 1e-5, grad_clip: 100.0, outscale: 1.0}
+  critic:
+    {layers: 2, dist: 'symlog_disc', slow_target: True, slow_target_update: 1, slow_target_fraction: 0.02, lr: 3e-5, eps: 1e-5, grad_clip: 100.0, outscale: 0.0}
+  reward_head:
+    {layers: 2, dist: 'symlog_disc', loss_scale: 1.0, outscale: 0.0}
+  cont_head:
+    {layers: 2, loss_scale: 1.0, outscale: 1.0}
+  encoder:
+    {mlp_keys: 'vector', cnn_keys: 'image', act: 'SiLU', norm: True, cnn_depth: 48, kernel_size: 4, minres: 4, mlp_layers: 4, mlp_units: 512, symlog_inputs: True}
+  decoder:
+    {mlp_keys: 'vector', cnn_keys: 'image', act: 'SiLU', norm: True, cnn_depth: 48, kernel_size: 4, minres: 4, mlp_layers: 4, mlp_units: 512, cnn_sigmoid: False, image_dist: 'mse', vector_dist: 'symlog_mse', outscale: 1.0}
+  dyn_hidden: 512
+  dyn_deter: 512
+  dyn_stoch: 32
+  dyn_discrete: 32
+  dyn_rec_depth: 1
+  dyn_mean_act: 'none'
+  dyn_std_act: 'sigmoid2'
+  dyn_min_std: 0.1
+  dyn_scale: 0.5
+  rep_scale: 0.1
+  kl_free: 1.0
+  initial: 'learned'
+  unimix_ratio: 0.01
+  discount: 0.997
+  discount_lambda: 0.95
+  imag_horizon: 15
+  imag_gradient: 'dynamics'
+  imag_gradient_mix: 0.0
+  eval_state_mean: False
+  expl_behavior: 'greedy'
+  expl_until: 0
+  expl_extr_scale: 0.0
+  expl_intr_scale: 1.0
+  eval_every: 10000
+  eval_episode_num: 10
+  log_every: 300
+  video_pred_log: True
+  reward_EMA: True
+
+circuit_routing_basic:
+  task: circuit_routing_basic
+  time_limit: 50
+
+test_4_layers_hd:
+  steps: 50000
+  eval_every: 5000
+  video_pred_log: True
+  
+  encoder:
+    mlp_layers: 4
+    cnn_depth: 96  
+  decoder:
+    mlp_layers: 4
+    cnn_depth: 96
+  
+test_6_layers_hd:
+  steps: 50000
+  eval_every: 5000
+  video_pred_log: True
+  
+  encoder:
+    mlp_layers: 6  
+    cnn_depth: 96   
+  decoder:
+    mlp_layers: 6
+    cnn_depth: 96
+# ============================================
+# Easy
+# ============================================
+circuit_routing_easy_stable:
+  task: circuit_routing_easy
+  steps: 5e5
+  envs: 4
+  action_repeat: 1
+  time_limit: 30
+  prefill: 5000
+  batch_size: 16
+  batch_length: 32
+  train_ratio: 256
+  pretrain: 50
+  dataset_size: 500000
+  model_lr: 3e-5
+  opt_eps: 1e-8
+  grad_clip: 100
+  
+  actor:
+    {layers: 2, dist: 'onehot', entropy: 1e-3, unimix_ratio: 0.01,
+     std: 'none', min_std: 0.1, max_std: 1.0, temp: 0.1,
+     lr: 1e-5, eps: 1e-5, grad_clip: 100.0, outscale: 1.0}
+  critic:
+    {layers: 2, dist: 'symlog_disc', slow_target: True,
+     slow_target_update: 1, slow_target_fraction: 0.02,
+     lr: 1e-5, eps: 1e-5, grad_clip: 100.0, outscale: 0.0}
+  reward_head:
+    {layers: 2, dist: 'symlog_disc', loss_scale: 0.5, outscale: 0.0}
+  cont_head:
+    {layers: 2, loss_scale: 0.5, outscale: 1.0}
+  
+  encoder:
+    {mlp_keys: 'vector', cnn_keys: 'image', act: 'SiLU', norm: True,
+     cnn_depth: 32, kernel_size: 4, minres: 4,
+     mlp_layers: 3, mlp_units: 256, symlog_inputs: True}
+  decoder:
+    {mlp_keys: 'vector', cnn_keys: 'image', act: 'SiLU', norm: True,
+     cnn_depth: 32, kernel_size: 4, minres: 4,
+     mlp_layers: 3, mlp_units: 256, cnn_sigmoid: False,
+     image_dist: 'mse', vector_dist: 'symlog_mse', outscale: 1.0}
+  
+  dyn_hidden: 256
+  dyn_deter: 256
+  dyn_stoch: 16
+  dyn_discrete: 16
+  dyn_rec_depth: 1
+  dyn_mean_act: 'none'
+  dyn_std_act: 'sigmoid2'
+  dyn_min_std: 0.1
+  dyn_scale: 0.1
+  rep_scale: 0.01
+  kl_free: 1.0
+  initial: 'learned'
+  unimix_ratio: 0.01
+  
+  discount: 0.99
+  discount_lambda: 0.95
+  imag_horizon: 10
+  imag_gradient: 'dynamics'
+  imag_gradient_mix: 0.0
+  eval_state_mean: False
+  
+  expl_behavior: 'greedy'
+  expl_until: 0
+  expl_extr_scale: 0.0
+  expl_intr_scale: 1.0
+  
+  eval_every: 5000
+  eval_episode_num: 5
+  log_every: 200
+  video_pred_log: False
+  reward_EMA: True
+# ==============================================
+# (CAE/VAE Mode)
+# ==============================================
+circuit_routing_cae:
+
+  defaults: [circuit_routing_easy_stable]
+  
+  dyn_deter: 0
+  actor_lr: 0.0
+  critic_lr: 0.0
+  loss_scales:
+    image: 1.0   
+    reward: 0.0  
+    cont: 0.0    
+    kl: 1.0      
+  eval_every: 1e8 
+  batch_size: 32 
+  batch_length: 16
+# ============================================
+# Medium
+# ============================================
+circuit_routing_medium_stable:
+  task: circuit_routing_medium
+  steps: 1e6
+  envs: 6
+  action_repeat: 1
+  time_limit: 50
+  prefill: 10000
+  
+  batch_size: 20
+  batch_length: 50
+  train_ratio: 384
+  pretrain: 75
+  dataset_size: 1000000
+  
+  model_lr: 2e-5
+  opt_eps: 1e-8
+  grad_clip: 150
+  
+  actor:
+    {layers: 3, dist: 'onehot', entropy: 8e-4, unimix_ratio: 0.01,
+     std: 'none', min_std: 0.1, max_std: 1.0, temp: 0.1,
+     lr: 8e-6, eps: 1e-5, grad_clip: 100.0, outscale: 1.0}
+  critic:
+    {layers: 3, dist: 'symlog_disc', slow_target: True,
+     slow_target_update: 1, slow_target_fraction: 0.02,
+     lr: 8e-6, eps: 1e-5, grad_clip: 100.0, outscale: 0.0}
+  reward_head:
+    {layers: 3, dist: 'symlog_disc', loss_scale: 0.6, outscale: 0.0}
+  cont_head:
+    {layers: 3, loss_scale: 0.6, outscale: 1.0}
+  
+  encoder:
+    {mlp_keys: 'vector', cnn_keys: 'image', act: 'SiLU', norm: True,
+     cnn_depth: 40, kernel_size: 4, minres: 4,
+     mlp_layers: 4, mlp_units: 384, symlog_inputs: True}
+  decoder:
+    {mlp_keys: 'vector', cnn_keys: 'image', act: 'SiLU', norm: True,
+     cnn_depth: 40, kernel_size: 4, minres: 4,
+     mlp_layers: 4, mlp_units: 384, cnn_sigmoid: False,
+     image_dist: 'mse', vector_dist: 'symlog_mse', outscale: 1.0}
+  
+  dyn_hidden: 384
+  dyn_deter: 384
+  dyn_stoch: 24
+  dyn_discrete: 24
+  dyn_rec_depth: 1
+  dyn_mean_act: 'none'
+  dyn_std_act: 'sigmoid2'
+  dyn_min_std: 0.1
+  dyn_scale: 0.2
+  rep_scale: 0.05
+  kl_free: 1.0
+  initial: 'learned'
+  unimix_ratio: 0.01
+  
+  discount: 0.995
+  discount_lambda: 0.95
+  imag_horizon: 12
+  imag_gradient: 'dynamics'
+  imag_gradient_mix: 0.0
+  eval_state_mean: False
+  
+  expl_behavior: 'greedy'
+  expl_until: 0
+  expl_extr_scale: 0.0
+  expl_intr_scale: 1.0
+  
+  eval_every: 8000
+  eval_episode_num: 8
+  log_every: 300
+  video_pred_log: False
+  reward_EMA: True
+
+# ============================================
+# Hard
+# ============================================
+circuit_routing_hard_stable:
+  task: circuit_routing_hard
+  steps: 2e6
+  envs: 8
+  action_repeat: 1
+  time_limit: 80
+  prefill: 15000
+  parallel: False
+  
+  batch_size: 24
+  batch_length: 64
+  train_ratio: 512
+  pretrain: 100
+  dataset_size: 2000000
+  
+  model_lr: 1.5e-5
+  opt_eps: 1e-8
+  grad_clip: 200
+ 
+  actor:
+    {layers: 4, dist: 'onehot', entropy: 5e-4, unimix_ratio: 0.01,
+     std: 'none', min_std: 0.1, max_std: 1.0, temp: 0.1,
+     lr: 5e-6, eps: 1e-5, grad_clip: 100.0, outscale: 1.0}
+  critic:
+    {layers: 4, dist: 'symlog_disc', slow_target: True,
+     slow_target_update: 1, slow_target_fraction: 0.01,
+     lr: 5e-6, eps: 1e-5, grad_clip: 100.0, outscale: 0.0}
+  reward_head:
+    {layers: 4, dist: 'symlog_disc', loss_scale: 0.8, outscale: 0.0}
+  cont_head:
+    {layers: 4, loss_scale: 0.8, outscale: 1.0}
+  
+  encoder:
+    {mlp_keys: 'vector', cnn_keys: 'image', act: 'SiLU', norm: True,
+     cnn_depth: 48, kernel_size: 4, minres: 4,
+     mlp_layers: 5, mlp_units: 512, symlog_inputs: True}
+  decoder:
+    {mlp_keys: 'vector', cnn_keys: 'image', act: 'SiLU', norm: True,
+     cnn_depth: 48, kernel_size: 4, minres: 4,
+     mlp_layers: 5, mlp_units: 512, cnn_sigmoid: False,
+     image_dist: 'mse', vector_dist: 'symlog_mse', outscale: 1.0}
+  
+  dyn_hidden: 512
+  dyn_deter: 512
+  dyn_stoch: 32
+  dyn_discrete: 32
+  dyn_rec_depth: 1
+  dyn_mean_act: 'none'
+  dyn_std_act: 'sigmoid2'
+  dyn_min_std: 0.1
+  dyn_scale: 0.3
+  rep_scale: 0.08
+  kl_free: 1.0
+  initial: 'learned'
+  unimix_ratio: 0.01
+  
+
+  discount: 0.997
+  discount_lambda: 0.95
+  imag_horizon: 15
+  imag_gradient: 'dynamics'
+  imag_gradient_mix: 0.0
+  eval_state_mean: False
+  
+  expl_behavior: 'greedy'
+  expl_until: 0
+  expl_extr_scale: 0.0
+  expl_intr_scale: 1.0
+  
+  eval_every: 10000
+  eval_episode_num: 10
+  log_every: 500
+  video_pred_log: False
+  reward_EMA: True
+# ==========================================
+#
+# ==========================================
+circuit_routing_discrete:
+  task: circuit_routing
+  steps: 1e8
+  action_repeat: 1
+  time_limit: 200
+  dyn_discrete: True
+  dyn_stoch: 32      
+  dyn_discrete_dim: 32 
+  eval_every: 1e4
+  log_every: 1e3
+  prefill: 2500
+  train_ratio: 32
+
+# ==========================================
+# (Gaussian)
+# ==========================================
+circuit_routing_gaussian:
+  task: circuit_routing
+  steps: 1e8
+  action_repeat: 1
+  time_limit: 200
+  dyn_discrete: False 
+  dyn_stoch: 512 
+  dyn_discrete_dim: 1 
+  eval_every: 1e4
+  log_every: 1e3
+  prefill: 2500
+  train_ratio: 32
+# ============================================
+# Expert
+# ============================================
+circuit_routing_expert_stable:
+  task: circuit_routing_expert
+  steps: 3e6
+  envs: 12
+  action_repeat: 1
+  time_limit: 100
+  prefill: 20000
+  parallel: False
+  
+  batch_size: 32
+  batch_length: 80
+  train_ratio: 640
+  pretrain: 150
+  dataset_size: 4000000
+  
+  model_lr: 1e-5
+  opt_eps: 1e-8
+  grad_clip: 250
+  
+ 
+  actor:
+    {layers: 5, dist: 'onehot', entropy: 3e-4, unimix_ratio: 0.01,
+     std: 'none', min_std: 0.1, max_std: 1.0, temp: 0.1,
+     lr: 3e-6, eps: 1e-5, grad_clip: 100.0, outscale: 1.0}
+  critic:
+    {layers: 5, dist: 'symlog_disc', slow_target: True,
+     slow_target_update: 1, slow_target_fraction: 0.01,
+     lr: 3e-6, eps: 1e-5, grad_clip: 100.0, outscale: 0.0}
+  reward_head:
+    {layers: 5, dist: 'symlog_disc', loss_scale: 1.0, outscale: 0.0}
+  cont_head:
+    {layers: 5, loss_scale: 1.0, outscale: 1.0}
+  
+
+  encoder:
+    {mlp_keys: 'vector', cnn_keys: 'image', act: 'SiLU', norm: True,
+     cnn_depth: 64, kernel_size: 4, minres: 4,
+     mlp_layers: 6, mlp_units: 768, symlog_inputs: True}
+  decoder:
+    {mlp_keys: 'vector', cnn_keys: 'image', act: 'SiLU', norm: True,
+     cnn_depth: 64, kernel_size: 4, minres: 4,
+     mlp_layers: 6, mlp_units: 768, cnn_sigmoid: False,
+     image_dist: 'mse', vector_dist: 'symlog_mse', outscale: 1.0}
+  
+ 
+  dyn_hidden: 768
+  dyn_deter: 768
+  dyn_stoch: 48
+  dyn_discrete: 48
+  dyn_rec_depth: 1
+  dyn_mean_act: 'none'
+  dyn_std_act: 'sigmoid2'
+  dyn_min_std: 0.1
+  dyn_scale: 0.4
+  rep_scale: 0.1
+  kl_free: 1.0
+  initial: 'learned'
+  unimix_ratio: 0.01
+  
+
+  discount: 0.998
+  discount_lambda: 0.95
+  imag_horizon: 20
+  imag_gradient: 'dynamics'
+  imag_gradient_mix: 0.0
+  eval_state_mean: False
+  
+  expl_behavior: 'greedy'
+  expl_until: 0
+  expl_extr_scale: 0.0
+  expl_intr_scale: 1.0
+  
+  eval_every: 15000
+  eval_episode_num: 10
+  log_every: 1000
+  video_pred_log: False
+  reward_EMA: True
 debug:
   debug: True
   pretrain: 1
